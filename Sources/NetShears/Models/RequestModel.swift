@@ -7,7 +7,7 @@
 import Foundation
 import UIKit
 
-public final class NetShearsRequestModel: Codable {
+public struct NetShearsRequestModel: Codable, Sendable {
     public let id: String
     public let url: String
     public let host: String?
@@ -85,7 +85,7 @@ public final class NetShearsRequestModel: Codable {
         }
     }
     
-    func initResponse(response: URLResponse) {
+    mutating func initResponse(response: URLResponse) {
         guard let responseHttp = response as? HTTPURLResponse else {return}
         code = responseHttp.statusCode
         responseHeaders = responseHttp.allHeaderFields as? [String: String]

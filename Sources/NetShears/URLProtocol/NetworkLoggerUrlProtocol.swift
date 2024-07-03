@@ -7,8 +7,7 @@
 
 import Foundation
 
-class NetworkLoggerUrlProtocol: URLProtocol {
-    
+final class NetworkLoggerUrlProtocol: URLProtocol {
     struct Constants {
         static let RequestHandledKey = "NetworkLoggerUrlProtocol"
     }
@@ -44,27 +43,35 @@ class NetworkLoggerUrlProtocol: URLProtocol {
     
     override func startLoading() {
         let newRequest = ((request as NSURLRequest).mutableCopy() as? NSMutableURLRequest)!
+        
         NetworkLoggerUrlProtocol.setProperty(true, forKey: Constants.RequestHandledKey, in: newRequest)
         sessionTask = session?.dataTask(with: newRequest as URLRequest)
         sessionTask?.resume()
         
         currentRequest = NetShearsRequestModel(request: newRequest, session: session)
+        
         if let request = currentRequest {
-            requestObserver.newRequestArrived(request)
+            Task {
+                await requestObserver.newRequestArrived(request)
+            }
         }
     }
     
     override func stopLoading() {
         sessionTask?.cancel()
         currentRequest?.httpBody = body(from: request)
+        
         if let startDate = currentRequest?.date{
             currentRequest?.duration = fabs(startDate.timeIntervalSinceNow) * 1000 //Find elapsed time and convert to milliseconds
         }
         currentRequest?.isFinished = true
         
         if let request = currentRequest {
-            requestObserver.newRequestArrived(request)
+            Task {
+                await requestObserver.newRequestArrived(request)
+            }
         }
+        
         session?.invalidateAndCancel()
     }
     
@@ -139,8 +146,10 @@ extension NetworkLoggerUrlProtocol: URLSessionDataDelegate {
     }
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
-        if let url = task.currentRequest?.url {
-            NetShears.shared.taskProgressDelegate?.task(url, didRecieveProgress: task.progress)
+        Task { @NetShearsActor in
+            if let url = task.currentRequest?.url {
+                NetShears.shared.taskProgressDelegate?.task(url, didRecieveProgress: task.progress)
+            }
         }
     }
 }

@@ -8,7 +8,11 @@
 import UIKit
 import SwiftUI
 
-public protocol BodyExporterDelegate: AnyObject {
+@globalActor public actor NetShearsActor: GlobalActor {
+    public static let shared = NetShearsActor()
+}
+
+public protocol BodyExporterDelegate: AnyObject, Sendable {
     func netShears(exportResponseBodyFor request: NetShearsRequestModel) -> BodyExportType
     func netShears(exportRequestBodyFor request: NetShearsRequestModel) -> BodyExportType
 }
@@ -22,9 +26,10 @@ public protocol TaskProgressDelegate: AnyObject {
     func task(_ url: URL, didRecieveProgress progress: Progress)
 }
 
+@NetShearsActor
 public final class NetShears: NSObject {
-    
     public static let shared = NetShears()
+    
     public weak var bodyExportDelegate: BodyExporterDelegate?
     public weak var taskProgressDelegate: TaskProgressDelegate?
     
@@ -47,8 +52,9 @@ public final class NetShears: NSObject {
             swizzled = true
         }
     }
-    public func startInterceptor() {
-        self.networkRequestInterceptor.startInterceptor()
+    
+    public func startInterceptor() async {
+        await self.networkRequestInterceptor.startInterceptor()
         checkSwizzling()
     }
 
@@ -89,12 +95,19 @@ public final class NetShears: NSObject {
         return config.removeModifier(at: index)
     }
 
-    public func presentNetworkMonitor() {
-        let storyboard = UIStoryboard.NetShearsStoryBoard
-        if let initialVC = storyboard.instantiateInitialViewController(){
-            initialVC.modalPresentationStyle = .fullScreen
-            ((initialVC as? UINavigationController)?.topViewController as? RequestsViewController)?.delegate = bodyExportDelegate
-            UIViewController.currentViewController()?.present(initialVC, animated: true, completion: nil)
+    public func presentNetworkMonitor() async {
+        let storyboard = await UIStoryboard.NetShearsStoryBoard
+        
+        if let initialVC = await storyboard.instantiateInitialViewController() {
+            await MainActor.run {
+                initialVC.modalPresentationStyle = .fullScreen
+                
+                Task {
+                    await ((initialVC as? UINavigationController)?.topViewController as? RequestsViewController)?.delegate = bodyExportDelegate
+                }
+            }
+            
+            await UIViewController.currentViewController()?.present(initialVC, animated: true, completion: nil)
         }
     }
     
@@ -114,7 +127,7 @@ public final class NetShears: NSObject {
                                  duration: Double?,
                                  scheme: String,
                                  requestHeaders: [String: String]?,
-                                 responseHeaders: [String: String]?) {
+                                 responseHeaders: [String: String]?) async {
         let request = NetShearsRequestModel(url: url,
                                             host: host,
                                             method: method,
@@ -128,10 +141,10 @@ public final class NetShears: NSObject {
                                             responseHeaders: responseHeaders,
                                             isFinished: true)
         if loggerEnable {
-            RequestStorage.shared.newRequestArrived(request)
+            await RequestStorage.shared.newRequestArrived(request)
         }
 
-        RequestBroadcast.shared.newRequestArrived(request)
+        await RequestBroadcast.shared.newRequestArrived(request)
     }
 
     public func addGRPC(url: String,
@@ -144,7 +157,7 @@ public final class NetShears: NSObject {
                         statusMessage: String?,
                         duration: Double?,
                         HPACKHeadersRequest: [String: String]?,
-                        HPACKHeadersResponse: [String: String]?){
-       addCustomRequest(url: url, host: host, method: method, requestObject: requestObject, responseObject: responseObject, success: success, statusCode: statusCode, statusMessage: statusMessage, duration: duration, scheme: "gRPC", requestHeaders: HPACKHeadersRequest, responseHeaders: HPACKHeadersResponse)
+                        HPACKHeadersResponse: [String: String]?) async {
+        await addCustomRequest(url: url, host: host, method: method, requestObject: requestObject, responseObject: responseObject, success: success, statusCode: statusCode, statusMessage: statusMessage, duration: duration, scheme: "gRPC", requestHeaders: HPACKHeadersRequest, responseHeaders: HPACKHeadersResponse)
     }
 }

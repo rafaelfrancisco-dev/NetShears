@@ -8,7 +8,6 @@
 import Foundation
 
 public struct RequestEvaluatorModifierHeader: RequestEvaluatorModifier, Equatable {
-    
     public var header: HeaderModifyModel
     
     public static var storeFileName: String {

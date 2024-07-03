@@ -11,7 +11,7 @@ public protocol RequestBroadcastDelegate: AnyObject {
     func newRequestArrived(_ request: NetShearsRequestModel)
 }
 
-public final class RequestBroadcast: RequestObserverProtocol {
+public final actor RequestBroadcast: RequestObserverProtocol {
     static public let shared = RequestBroadcast()
 
     var delegate = ThreadSafe<RequestBroadcastDelegate?>(nil)
@@ -30,7 +30,7 @@ public final class RequestBroadcast: RequestObserverProtocol {
         }
     }
 
-    func newRequestArrived(_ request: NetShearsRequestModel) {
+    func newRequestArrived(_ request: NetShearsRequestModel) async {
         delegate.atomically { delegate in
             delegate?.newRequestArrived(request)
         }

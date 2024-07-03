@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct RedirectedRequestModel: Codable, Equatable {
+public struct RedirectedRequestModel: Codable, Equatable, Sendable {
     public let originalUrl: String
     public let redirectUrl: String
 
@@ -17,7 +17,7 @@ public struct RedirectedRequestModel: Codable, Equatable {
     }
 }
 
-public struct HeaderModifyModel: Codable, Equatable {
+public struct HeaderModifyModel: Codable, Equatable, Sendable {
     public let key: String
     public let value: String
 
@@ -27,7 +27,7 @@ public struct HeaderModifyModel: Codable, Equatable {
     }
 }
 
-public struct HTTPResponseModifyModel: Codable, Equatable {
+public struct HTTPResponseModifyModel: Codable, Equatable, Sendable {
     public let url: String
     public let httpMethod: String
     
@@ -58,7 +58,7 @@ public struct HTTPResponseModifyModel: Codable, Equatable {
     }
 }
 
-final class NetworkInterceptorConfig {
+struct NetworkInterceptorConfig: Sendable {
     var modifiers: [Modifier] = [] {
         didSet {
             modifiers.store()
@@ -69,7 +69,7 @@ final class NetworkInterceptorConfig {
         self.modifiers = modifiers
     }
     
-    func addModifier(modifier: Modifier) {
+    mutating func addModifier(modifier: Modifier) {
         self.modifiers.append(modifier)
     }
     
@@ -77,7 +77,7 @@ final class NetworkInterceptorConfig {
         return self.modifiers
     }
     
-    func removeModifier(at index: Int) {
+    mutating func removeModifier(at index: Int) {
         guard index <= modifiers.count - 1 else { return }
         modifiers.remove(at: index)
     }

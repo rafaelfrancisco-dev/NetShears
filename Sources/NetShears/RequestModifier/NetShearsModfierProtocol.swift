@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol Modifier: RequestEvaluator, RequestModifierStorage, Codable {}
+public protocol Modifier: RequestEvaluator, RequestModifierStorage, Codable, Sendable {}
 
 public protocol RequestEvaluator {
     func isActionAllowed(urlRequest: URLRequest) -> Bool

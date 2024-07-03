@@ -14,7 +14,7 @@ class RequestsViewController: UIViewController, ShowLoaderProtocol {
     @IBOutlet weak var collectionView: UICollectionView!
     weak var delegate: BodyExporterDelegate?
 
-    private var filteredRequests: [NetShearsRequestModel] = Storage.shared.filteredRequests
+    private var filteredRequests: [NetShearsRequestModel] = []
     
     private var searchController: UISearchController?
     private let requestCellIdentifier = String(describing: RequestCell.self)
@@ -22,14 +22,18 @@ class RequestsViewController: UIViewController, ShowLoaderProtocol {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        Task {
+            filteredRequests = await Storage.shared.filteredRequests()
+        }
+        
         addNavigationItems()
         addSearchController()
         registerNibs()
         
-        NotificationCenter.default.addObserver(forName: NSNotification.Name.NewRequestNotification, object: nil, queue: nil) { [weak self] (notification) in
-            DispatchQueue.main.async { [weak self] in
-                self?.filteredRequests = self?.filterRequests(text: self?.searchController?.searchBar.text) ?? []
-                self?.collectionView.reloadData()
+        NotificationCenter.default.addObserver(forName: NSNotification.Name.NewRequestNotification, object: nil, queue: nil) { notification in
+            Task { @MainActor in
+                self.filteredRequests = await self.filterRequests(text: self.searchController?.searchBar.text)
+                self.collectionView.reloadData()
             }
         }
     }
@@ -42,41 +46,52 @@ class RequestsViewController: UIViewController, ShowLoaderProtocol {
         collectionView?.register(UINib(nibName: String(describing: RequestCell.self), bundle: Bundle.NetShearsBundle), forCellWithReuseIdentifier: requestCellIdentifier)
     }
     
+    func setDelegate(delegate: BodyExporterDelegate) {
+        
+    }
+    
     //  MARK: - Search
     
     private func addSearchController(){
         searchController = UISearchController(searchResultsController: nil)
         searchController?.searchResultsUpdater = self
+        
         if #available(iOS 9.1, *) {
             searchController?.obscuresBackgroundDuringPresentation = false
         } else {
             // Fallback
         }
+        
         searchController?.searchBar.placeholder = "Search URL"
+        
         if #available(iOS 11.0, *) {
             navigationItem.searchController = searchController
         } else {
             navigationItem.titleView = searchController?.searchBar
         }
+        
         definesPresentationContext = true
     }
     
-    private func filterRequests(text: String?) -> [NetShearsRequestModel]{
-        guard let searchText = text, !searchText.isEmpty else { return Storage.shared.filteredRequests }
+    private func filterRequests(text: String?) async -> [NetShearsRequestModel]{
+        guard let searchText = text, !searchText.isEmpty else { return await Storage.shared.filteredRequests() }
         
-        return Storage.shared.filteredRequests.filter {
+        return await Storage.shared.filteredRequests().filter {
              $0.url.range(of: searchText, options: .caseInsensitive) != nil
         }
     }
     
     // MARK: - Actions
     
-    @objc private func openActionSheet(_ sender: UIBarButtonItem){
+    @objc private func openActionSheet(_ sender: UIBarButtonItem) {
         let ac = UIAlertController(title: "Wormholy", message: "Choose an option", preferredStyle: .actionSheet)
         
         ac.addAction(UIAlertAction(title: "Clear", style: .default) { [weak self] (action) in
-            self?.clearRequests()
+            Task {
+                await self?.clearRequests()
+            }
         })
+        
         ac.addAction(UIAlertAction(title: "Share", style: .default) { [weak self] (action) in
             self?.shareContent(sender)
         })
@@ -84,20 +99,23 @@ class RequestsViewController: UIViewController, ShowLoaderProtocol {
         ac.addAction(UIAlertAction(title: "Share as cURL", style: .default) { [weak self] (action) in
             self?.shareContent(sender, requestExportOption: .curl)
         })
+        
         ac.addAction(UIAlertAction(title: "Share as Postman Collection", style: .default) { [weak self] (action) in
                    self?.shareContent(sender, requestExportOption: .postman)
                })
         ac.addAction(UIAlertAction(title: "Close", style: .cancel) { (action) in
         })
+        
         if UIDevice.current.userInterfaceIdiom == .pad {
             ac.popoverPresentationController?.barButtonItem = sender
         }
+        
         present(ac, animated: true, completion: nil)
     }
 
-    private func clearRequests() {
-        Storage.shared.clearRequests()
-        filteredRequests = Storage.shared.filteredRequests
+    private func clearRequests() async {
+        await Storage.shared.clearRequests()
+        filteredRequests = await Storage.shared.filteredRequests()
         collectionView.reloadData()
     }
     
@@ -159,7 +177,9 @@ extension RequestsViewController: UICollectionViewDelegate, UICollectionViewDele
 // MARK: - UISearchResultsUpdating Delegate
 extension RequestsViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
-        filteredRequests = filterRequests(text: searchController.searchBar.text)
-        collectionView.reloadData()
+        Task {
+            filteredRequests = await filterRequests(text: searchController.searchBar.text)
+            collectionView.reloadData()
+        }
     }
 }

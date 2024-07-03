@@ -7,8 +7,7 @@
 
 import Foundation
 
-class NetwrokListenerUrlProtocol: URLProtocol {
-    
+final class NetwrokListenerUrlProtocol: URLProtocol {
     struct Constants {
         static let RequestHandledKey = "NetworkListenerUrlProtocol"
     }
@@ -49,8 +48,11 @@ class NetwrokListenerUrlProtocol: URLProtocol {
         sessionTask?.resume()
         
         currentRequest = NetShearsRequestModel(request: newRequest, session: session)
+        
         if let request = currentRequest {
-            requestObserver.newRequestArrived(request)
+            Task {
+                await requestObserver.newRequestArrived(request)
+            }
         }
     }
     
@@ -63,8 +65,11 @@ class NetwrokListenerUrlProtocol: URLProtocol {
         currentRequest?.isFinished = true
         
         if let request = currentRequest {
-            requestObserver.newRequestArrived(request)
+            Task {
+                await requestObserver.newRequestArrived(request)
+            }
         }
+        
         session?.invalidateAndCancel()
     }
     
@@ -139,8 +144,10 @@ extension NetwrokListenerUrlProtocol: URLSessionDataDelegate {
     }
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
-        if let url = task.currentRequest?.url {
-            NetShears.shared.taskProgressDelegate?.task(url, didRecieveProgress: task.progress)
+        Task { @NetShearsActor in
+            if let url = task.currentRequest?.url {
+                NetShears.shared.taskProgressDelegate?.task(url, didRecieveProgress: task.progress)
+            }
         }
     }
 }

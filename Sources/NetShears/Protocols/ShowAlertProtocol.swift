@@ -12,10 +12,10 @@ protocol ShowAlertProtocol {
 }
 
 extension ShowLoaderProtocol where Self: UIViewController {
-    func showAlert(alertMessage : String) {
-        let alert = UIAlertController(title: nil, message: alertMessage, preferredStyle: UIAlertController.Style.alert)
-        alert.addAction(UIAlertAction(title: "Got it", style: UIAlertAction.Style.default, handler: nil))
+    func showAlert(alertMessage : String) async {
+        let alert = await UIAlertController(title: nil, message: alertMessage, preferredStyle: UIAlertController.Style.alert)
+        await alert.addAction(UIAlertAction(title: "Got it", style: UIAlertAction.Style.default, handler: nil))
         
-        self.present(alert, animated: true, completion: nil)
+        await self.present(alert, animated: true, completion: nil)
     }
 }

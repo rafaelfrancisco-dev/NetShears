@@ -7,7 +7,8 @@
 
 import Foundation
 
-class NetworkInterceptorUrlProtocol: URLProtocol {
+final class NetworkInterceptorUrlProtocol: URLProtocol {
+    @MainActor
     static var blacklistedHosts = [String]()
     
     struct Constants {
@@ -25,21 +26,25 @@ class NetworkInterceptorUrlProtocol: URLProtocol {
         }
     }
     
+    @NetShearsActor
     override class func canInit(with request: URLRequest) -> Bool {
         guard NetworkInterceptor.shared.shouldRequestModify(urlRequest: request) else { return false }
         
         if NetworkInterceptorUrlProtocol.property(forKey: Constants.RequestHandledKey, in: request) != nil {
             return actionModifier(forRequest: request) != nil
         }
+        
         return true
     }
     
-    open override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+    @NetShearsActor
+    public override class func canonicalRequest(for request: URLRequest) -> URLRequest {
         let mutableRequest: NSMutableURLRequest = (request as NSURLRequest).mutableCopy() as! NSMutableURLRequest
         URLProtocol.setProperty("YES", forKey: "NetworkInterceptorUrlProtocol", in: mutableRequest)
         return mutableRequest.copy() as! URLRequest
     }
     
+    @NetShearsActor
     override func startLoading() {
         if let actionModifier = Self.actionModifier(forRequest: request) {
             actionModifier.modify(client: client, urlProtocol: self)
@@ -67,6 +72,7 @@ class NetworkInterceptorUrlProtocol: URLProtocol {
         sessionTask = nil
     }
     
+    @NetShearsActor 
     class func actionModifier(forRequest request: URLRequest) -> RequestEvaluatorActionModifier? {
         NetShears.shared.config.modifiers
             .compactMap({ $0 as? RequestEvaluatorActionModifier })
@@ -123,8 +129,10 @@ extension NetworkInterceptorUrlProtocol: URLSessionDataDelegate {
     }
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
-        if let url = task.currentRequest?.url {
-            NetShears.shared.taskProgressDelegate?.task(url, didRecieveProgress: task.progress)
+        Task { @NetShearsActor in
+            if let url = task.currentRequest?.url {
+                NetShears.shared.taskProgressDelegate?.task(url, didRecieveProgress: task.progress)
+            }
         }
     }
 }

@@ -7,10 +7,10 @@
 
 import Foundation
 
-
+@NetShearsActor
 @objc class NetworkInterceptor: NSObject {
-    
     @objc static let shared = NetworkInterceptor()
+    
     let networkRequestInterceptor = NetworkRequestInterceptor()
 
     func shouldRequestModify(urlRequest: URLRequest) -> Bool {

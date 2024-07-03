@@ -7,7 +7,7 @@
 
 import UIKit
 
-public enum BodyExportType {
+public enum BodyExportType: Sendable {
     case `default`
     case custom(_ text: String)
 }
@@ -38,7 +38,7 @@ final class RequestExporter: NSObject {
         return final
     }
     
-    static func body(_ body: Data?, splitLength: Int? = nil, bodyExportType: BodyExportType, completion: @escaping (String) -> Void){
+    static func body(_ body: Data?, splitLength: Int? = nil, bodyExportType: BodyExportType, completion: @escaping @Sendable (String) -> Void){
         DispatchQueue.global().async {
             completion(RequestExporter.body(body, splitLength: splitLength, bodyExportType: bodyExportType))
             return

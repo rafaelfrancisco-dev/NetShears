@@ -6,10 +6,9 @@
 //
 import Foundation
 
-
-@objc class NetworkRequestInterceptor: NSObject{
-    
-    func swizzleProtocolClasses(){
+@NetShearsActor
+@objc class NetworkRequestInterceptor: NSObject {
+    func swizzleProtocolClasses() {
         let instance = URLSessionConfiguration.default
         let uRLSessionConfigurationClass: AnyClass = object_getClass(instance)!
         
@@ -19,7 +18,7 @@ import Foundation
         method_exchangeImplementations(method1, method2)
     }
 
-    func startInterceptor() {
+    func startInterceptor() async {
         NetShears.shared.interceptorEnable = true
         URLProtocol.registerClass(NetworkInterceptorUrlProtocol.self)
     }

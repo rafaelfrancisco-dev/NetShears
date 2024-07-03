@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum Ignore {
+public enum Ignore: Sendable {
     case disbaled
-    case enabled(ignoreHandler: (NetShearsRequestModel) -> Bool)
+    case enabled(ignoreHandler: @Sendable (NetShearsRequestModel) -> Bool)
 }

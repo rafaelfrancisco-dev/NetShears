@@ -98,11 +98,13 @@ final class BodyDetailViewController: UIViewController, ShowLoaderProtocol {
 
     private func setBody() {
         let hud = showLoader(view: view)
-        RequestExporter.body(data, bodyExportType: bodyExportType) { [weak self] stringData in
+        
+        RequestExporter.body(data, bodyExportType: bodyExportType) { stringData in
             let formattedJSON = stringData
-            DispatchQueue.main.async {
-                self?.textView.text = formattedJSON
-                self?.hideLoader(loaderView: hud)
+            
+            Task { @MainActor in
+                self.textView.text = formattedJSON
+                self.hideLoader(loaderView: hud)
             }
         }
     }

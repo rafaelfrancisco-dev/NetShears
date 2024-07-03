@@ -12,12 +12,13 @@ protocol ShowLoaderProtocol {
     func hideLoader(loaderView: UIView?)
 }
 
+@MainActor
 extension ShowLoaderProtocol where Self: UIViewController {
-    func showLoader(view: UIView) -> UIView{
+    func showLoader(view: UIView) -> UIView {
         //LoaderView with view size, with indicator placed on center of loaderView
         let loaderView = UIView(frame: view.bounds)
         loaderView.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.1)
-        let indicator: UIActivityIndicatorView = UIActivityIndicatorView(style: UIActivityIndicatorView.Style.gray)
+        let indicator: UIActivityIndicatorView = UIActivityIndicatorView(style: UIActivityIndicatorView.Style.medium)
         indicator.center = loaderView.center
         loaderView.addSubview(indicator)
         view.addSubview(loaderView)
@@ -26,7 +27,7 @@ extension ShowLoaderProtocol where Self: UIViewController {
         return loaderView
     }
     
-    func hideLoader(loaderView: UIView?){
+    func hideLoader(loaderView: UIView?) {
         loaderView?.removeFromSuperview()
     }
 }

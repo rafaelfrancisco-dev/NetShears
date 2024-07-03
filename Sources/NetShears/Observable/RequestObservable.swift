@@ -8,7 +8,7 @@
 import Foundation
 
 protocol RequestObserverProtocol {
-    func newRequestArrived(_ request: NetShearsRequestModel)
+    func newRequestArrived(_ request: NetShearsRequestModel) async
 }
 
 final class RequestObserver: RequestObserverProtocol {
@@ -18,9 +18,9 @@ final class RequestObserver: RequestObserverProtocol {
         self.options = options
     }
 
-    func newRequestArrived(_ request: NetShearsRequestModel) {
-        options.forEach {
-            $0.newRequestArrived(request)
+    func newRequestArrived(_ request: NetShearsRequestModel) async {
+        for option in options {
+            await option.newRequestArrived(request)
         }
     }
 }

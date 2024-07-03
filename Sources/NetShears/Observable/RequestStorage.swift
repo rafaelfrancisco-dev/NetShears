@@ -7,12 +7,12 @@
 
 import Foundation
 
-final class RequestStorage: RequestObserverProtocol {
+final actor RequestStorage: RequestObserverProtocol {
     static let shared = RequestStorage()
 
     private init() {}
     
-    func newRequestArrived(_ request: NetShearsRequestModel) {
-        Storage.shared.saveRequest(request: request)
+    func newRequestArrived(_ request: NetShearsRequestModel) async {
+        await Storage.shared.saveRequest(request: request)
     }
 }
