@@ -7,9 +7,24 @@
 
 import Foundation
 
+nonisolated(unsafe) private var cl = [AnyClass]()
+
 extension URLSessionConfiguration {
-    @NetShearsActor 
     @objc func fakeProcotolClasses() -> [AnyClass]? {
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        let classes = Task {
+            await cl = doChecksForEnables()
+            semaphore.signal()
+        }
+        
+        semaphore.wait()
+        
+        return cl
+    }
+    
+    @NetShearsActor
+    func doChecksForEnables() -> [AnyClass] {
         guard let fakeProcotolClasses = self.fakeProcotolClasses() else {
             return []
         }

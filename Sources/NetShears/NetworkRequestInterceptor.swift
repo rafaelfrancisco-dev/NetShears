@@ -18,7 +18,7 @@ import Foundation
         method_exchangeImplementations(method1, method2)
     }
 
-    func startInterceptor() async {
+    func startInterceptor() {
         NetShears.shared.interceptorEnable = true
         URLProtocol.registerClass(NetworkInterceptorUrlProtocol.self)
     }
