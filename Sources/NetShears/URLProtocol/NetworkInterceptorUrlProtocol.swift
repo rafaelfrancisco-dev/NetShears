@@ -7,7 +7,9 @@
 
 import Foundation
 
-final class NetworkInterceptorUrlProtocol: URLProtocol {
+extension URLProtocol: @unchecked @retroactive Sendable {}
+
+final class NetworkInterceptorUrlProtocol: URLProtocol, @unchecked Sendable {
     @MainActor
     static var blacklistedHosts = [String]()
     

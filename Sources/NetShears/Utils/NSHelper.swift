@@ -9,7 +9,7 @@
 import UIKit
 
 final class NSHelper {
-
+    @MainActor 
     static func shareRequests(presentingViewController: UIViewController, sender: UIBarButtonItem, requests: [NetShearsRequestModel], requestExportOption: RequestResponseExportOption = .flat, delegate: BodyExporterDelegate?){
          var text = ""
          switch requestExportOption {
@@ -37,7 +37,9 @@ final class NSHelper {
                  FileHandler.writeTxtFileOnDesktop(text: string, fileName: filename)
              }
          }
+        
          let activityViewController = UIActivityViewController(activityItems: textShare, applicationActivities: [customItem])
+        
          activityViewController.popoverPresentationController?.barButtonItem = sender
          presentingViewController.present(activityViewController, animated: true, completion: nil)
      }
@@ -47,6 +49,7 @@ final class NSHelper {
         for request in requests{
             text = text + RequestExporter.txtExport(request: request, delegate: delegate)
         }
+        
         return text
     }
     
@@ -55,6 +58,7 @@ final class NSHelper {
         for request in requests{
             text = text + RequestExporter.curlExport(request: request, delegate: delegate)
         }
+        
         return text
     }
     

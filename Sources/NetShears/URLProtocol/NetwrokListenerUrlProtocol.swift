@@ -7,7 +7,7 @@
 
 import Foundation
 
-final class NetwrokListenerUrlProtocol: URLProtocol {
+final class NetwrokListenerUrlProtocol: URLProtocol, @unchecked Sendable {
     struct Constants {
         static let RequestHandledKey = "NetworkListenerUrlProtocol"
     }

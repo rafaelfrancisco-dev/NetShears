@@ -8,12 +8,12 @@
 import UIKit
 
 protocol ShowLoaderProtocol {
-    func showLoader(view: UIView) -> UIView
-    func hideLoader(loaderView: UIView?)
+    func showLoader(view: UIView) async -> UIView
+    func hideLoader(loaderView: UIView?) async
 }
 
-@MainActor
 extension ShowLoaderProtocol where Self: UIViewController {
+    @MainActor
     func showLoader(view: UIView) -> UIView {
         //LoaderView with view size, with indicator placed on center of loaderView
         let loaderView = UIView(frame: view.bounds)
@@ -27,6 +27,7 @@ extension ShowLoaderProtocol where Self: UIViewController {
         return loaderView
     }
     
+    @MainActor
     func hideLoader(loaderView: UIView?) {
         loaderView?.removeFromSuperview()
     }

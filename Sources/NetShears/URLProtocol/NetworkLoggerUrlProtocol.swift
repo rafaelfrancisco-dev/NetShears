@@ -7,7 +7,7 @@
 
 import Foundation
 
-final class NetworkLoggerUrlProtocol: URLProtocol {
+final class NetworkLoggerUrlProtocol: URLProtocol, @unchecked Sendable {
     struct Constants {
         static let RequestHandledKey = "NetworkLoggerUrlProtocol"
     }
